@@ -282,6 +282,54 @@ describe("loadAppBootstrap", () => {
     expect(bootstrap.reloadContext.initialWatchSignature).toBeUndefined();
   });
 
+  test("hides files matched by exclude patterns, whatever the source", async () => {
+    const patch = [
+      "diff --git a/README.md b/README.md",
+      "--- a/README.md",
+      "+++ b/README.md",
+      "@@ -1 +1 @@",
+      "-one",
+      "+two",
+      "diff --git a/src/app.ts b/src/app.ts",
+      "--- a/src/app.ts",
+      "+++ b/src/app.ts",
+      "@@ -1 +1 @@",
+      "-one",
+      "+two",
+      "diff --git a/src/app.test.ts b/src/app.test.ts",
+      "--- a/src/app.test.ts",
+      "+++ b/src/app.test.ts",
+      "@@ -1 +1 @@",
+      "-one",
+      "+two",
+      "",
+    ].join("\n");
+
+    const unfiltered = await loadAppBootstrap({ kind: "patch", text: patch, options: {} });
+    const filtered = await loadAppBootstrap({
+      kind: "patch",
+      text: patch,
+      options: { excludePatterns: ["*.md", "**/*.test.ts"] },
+    });
+
+    expect(unfiltered.changeset.files.map((file) => file.path)).toEqual([
+      "README.md",
+      "src/app.ts",
+      "src/app.test.ts",
+    ]);
+    expect(filtered.changeset.files.map((file) => file.path)).toEqual(["src/app.ts"]);
+  });
+
+  test("reports an invalid exclude pattern as a user error", async () => {
+    await expect(
+      loadAppBootstrap({
+        kind: "patch",
+        text: "diff --git a/a.ts b/a.ts\n--- a/a.ts\n+++ b/a.ts\n@@ -1 +1 @@\n-one\n+two\n",
+        options: { excludePatterns: [" "] },
+      }),
+    ).rejects.toThrow("Expected a glob pattern to exclude");
+  });
+
   test("loads file-pair diffs and agent context", async () => {
     const dir = mkdtempSync(join(tmpdir(), "hunk-diff-"));
     tempDirs.push(dir);

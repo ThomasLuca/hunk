@@ -66,6 +66,7 @@ const commonOptionsSchema = z.strictObject({
   experimental: z.boolean().optional(),
   fast: z.boolean().optional(),
   excludeUntracked: z.boolean().optional(),
+  excludePatterns: z.array(z.string()).optional(),
   lineNumbers: z.boolean().optional(),
   tabWidth: z.int().positive().optional(),
   fileGap: z.int().nonnegative().optional(),

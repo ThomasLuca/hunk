@@ -150,6 +150,7 @@ mode = "auto"        # auto, split, stack
 vcs = "git"          # git, jj, sl
 watch = false
 exclude_untracked = false
+exclude = []         # glob patterns whose files are hidden from every review
 line_numbers = true
 tab_width = 4        # tab stops, 1-16
 file_gap = 1         # rows between files, including the ─ rule; 0 hides it
@@ -167,6 +168,11 @@ Choose a built-in theme, `auto`, or a custom theme with `theme`. See
 syntax scopes, and legacy syntax-table migration.
 
 `exclude_untracked` affects Git/Sapling working-tree `hunk diff` sessions only.
+`exclude` hides files whose path matches one of its globs, in every review source, and
+`--exclude <pattern>` sets it per run: `hunk diff --exclude '*.md' --exclude 'test/**'`.
+Patterns are gitignore-shaped — one without `/` matches any path segment, so `"*.md"`
+hides Markdown anywhere and `"test"` hides any `test/` directory, while one with `/` is
+anchored at the repository root.
 `tab_width` controls source-code tab stops and can be overridden with `-x4` or `--tab-width 4`.
 `file_gap` is separator height between files, including the `─` rule; `hunk_gap` is blank rows before later hunks.
 `prompt_save_view_preferences = false` disables the quit prompt for saving changed view preferences.

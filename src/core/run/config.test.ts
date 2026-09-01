@@ -872,6 +872,39 @@ describe("config resolution", () => {
     expect(fallbackResolved.input.options.excludeUntracked).toBe(false);
   });
 
+  test("reads exclude globs from config and lets --exclude replace them", () => {
+    const home = createTempDir("hunk-config-home-");
+    mkdirSync(join(home, ".config", "hunk"), { recursive: true });
+    writeFileSync(join(home, ".config", "hunk", "config.toml"), 'exclude = ["*.md", "test/**"]\n');
+
+    const cwd = createTempDir("hunk-config-cwd-");
+    const fromConfig = resolveConfiguredCliInput(
+      { kind: "vcs", staged: false, options: {} },
+      { cwd, env: { HOME: home } },
+    );
+    const fromCli = resolveConfiguredCliInput(
+      { kind: "vcs", staged: false, options: { excludePatterns: ["*.snap"] } },
+      { cwd, env: { HOME: home } },
+    );
+
+    expect(fromConfig.input.options.excludePatterns).toEqual(["*.md", "test/**"]);
+    expect(fromCli.input.options.excludePatterns).toEqual(["*.snap"]);
+  });
+
+  test("rejects an exclude key that is not an array of strings", () => {
+    const home = createTempDir("hunk-config-home-");
+    mkdirSync(join(home, ".config", "hunk"), { recursive: true });
+    writeFileSync(join(home, ".config", "hunk", "config.toml"), 'exclude = "*.md"\n');
+
+    const cwd = createTempDir("hunk-config-cwd-");
+    expect(() =>
+      resolveConfiguredCliInput(
+        { kind: "vcs", staged: false, options: {} },
+        { cwd, env: { HOME: home } },
+      ),
+    ).toThrow(/Expected exclude to be an array of glob pattern strings/);
+  });
+
   test.each([
     {
       name: "enables watch from config",

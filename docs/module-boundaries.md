@@ -82,7 +82,8 @@ files at `core/*` root — into `core/changeset/`, with the surface split enforc
 - **Interior:** `fromPatch` turns patch text into the model and is reached through `loaders`;
   `fileLanguageLookup` is the only reader/writer of Pierre's process-global extension table
   and the import that drags in the diff engine; `sidecar` reads `--agent-context` as one step
-  of acquiring a changeset.
+  of acquiring a changeset; `excludeFilter` compiles `--exclude` globs and drops the files they
+  match, as the last step before the loaded file order is fixed.
 
 The renames are path-only — `changeset.ts` → `changeset/model.ts`, `changesetLoaders.ts` →
 `changeset/loaders.ts`, `changesetFromPatch.ts` → `changeset/fromPatch.ts`, the rest keep their

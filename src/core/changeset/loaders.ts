@@ -14,6 +14,7 @@ import { createSkippedBinaryMetadata, isProbablyBinaryFile } from "./binary";
 import { buildDiffFile, type BuildDiffFileOptions, type DiffFileSourceContext } from "./diffFile";
 import { createFileSourceFetcher, type FileSourceSpec } from "./fileSource";
 import { changesetFromPatch } from "./fromPatch";
+import { filterExcludedDiffFiles } from "./excludeFilter";
 
 import { DEFAULT_FILE_GAP, DEFAULT_HUNK_GAP } from "../run/reviewGap";
 import { DEFAULT_TAB_WIDTH } from "../run/tabWidth";
@@ -317,9 +318,14 @@ export async function loadAppBootstrap(
       break;
   }
 
+  // Exclusion runs before ordering so every source shares one filter, and so sidecar order
+  // still applies to whatever survives it.
   changeset = {
     ...changeset,
-    files: orderDiffFiles(changeset.files, sidecar),
+    files: orderDiffFiles(
+      filterExcludedDiffFiles(changeset.files, input.options.excludePatterns),
+      sidecar,
+    ),
   };
 
   return {

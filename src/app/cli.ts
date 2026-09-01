@@ -134,6 +134,11 @@ export const COMMON_REVIEW_OPTIONS = [
   { flag: "--transparent-bg", description: "let terminal background show through Hunk surfaces" },
   { flag: "--no-transparent-bg", description: "paint Hunk surfaces with the active theme" },
   {
+    flag: "--exclude <pattern>",
+    description: "hide files matching a glob, gitignore-style (repeatable)",
+    parse: "collect",
+  },
+  {
     flag: "--extension <path>",
     description: "load an extension entry file or directory (repeatable)",
     parse: "collect",
@@ -388,6 +393,7 @@ function buildCommonOptions(
     tabWidth?: number;
     fileGap?: number;
     hunkGap?: number;
+    exclude?: string[];
     extension?: string[];
   },
   argv: string[],
@@ -421,6 +427,7 @@ function buildCommonOptions(
     // Read straight from argv so the absence of the flag stays undefined rather than
     // becoming Commander's implicit `true` default for a negatable option.
     extensions: resolveBooleanFlag(argv, "--extensions", "--no-extensions"),
+    excludePatterns: options.exclude && options.exclude.length > 0 ? options.exclude : undefined,
     extensionPaths:
       options.extension && options.extension.length > 0 ? options.extension : undefined,
   };
@@ -545,6 +552,7 @@ function renderCliHelp() {
     "  --agent-notes / --no-agent-notes        show or hide agent notes by default",
     "  --transparent-bg / --no-transparent-bg  let terminal background show through Hunk surfaces",
     "  --theme <theme>                         named theme override",
+    "  --exclude <pattern>                     hide files matching a glob (repeatable)",
     "  --extension <path>                      load an extension entry file or directory (repeatable)",
     "  --no-extensions                         disable user extensions for this run",
     "",

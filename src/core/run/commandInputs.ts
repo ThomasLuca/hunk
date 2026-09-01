@@ -33,6 +33,8 @@ export interface CommonOptions {
   /** Offload eligible syntax highlighting for this launch. */
   fast?: boolean;
   excludeUntracked?: boolean;
+  /** Glob patterns from `--exclude` (or config) whose matching files are hidden from review. */
+  excludePatterns?: string[];
   lineNumbers?: boolean;
   tabWidth?: number;
   /** Blank rows between files in the review stream, including the `─` rule. */

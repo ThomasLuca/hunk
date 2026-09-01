@@ -2136,6 +2136,67 @@ describe("parseCli session comment apply payload", () => {
   });
 });
 
+describe("parseCli exclude flag", () => {
+  test("leaves exclude patterns unset when the flag is absent", async () => {
+    const parsed = await parseCli(["bun", "hunk", "diff"]);
+
+    if (parsed.kind !== "vcs") {
+      throw new Error("Expected a vcs command.");
+    }
+
+    expect(parsed.options.excludePatterns).toBeUndefined();
+  });
+
+  test("collects repeated --exclude patterns in order", async () => {
+    const parsed = await parseCli([
+      "bun",
+      "hunk",
+      "diff",
+      "--exclude",
+      "*.md",
+      "--exclude",
+      "test/**",
+    ]);
+
+    if (parsed.kind !== "vcs") {
+      throw new Error("Expected a vcs command.");
+    }
+
+    expect(parsed.options.excludePatterns).toEqual(["*.md", "test/**"]);
+  });
+
+  test("keeps exclude patterns separate from trailing pathspecs", async () => {
+    const parsed = await parseCli(["bun", "hunk", "diff", "--exclude", "*.md", "--", "src"]);
+
+    if (parsed.kind !== "vcs") {
+      throw new Error("Expected a vcs command.");
+    }
+
+    expect(parsed.options.excludePatterns).toEqual(["*.md"]);
+    expect(parsed.pathspecs).toEqual(["src"]);
+  });
+
+  test("accepts --exclude on a patch review too", async () => {
+    const parsed = await parseCli(["bun", "hunk", "patch", "-", "--exclude", "*.md"]);
+
+    if (parsed.kind !== "patch") {
+      throw new Error("Expected a patch command.");
+    }
+
+    expect(parsed.options.excludePatterns).toEqual(["*.md"]);
+  });
+
+  test("documents the exclude flag in top-level help", async () => {
+    const parsed = await parseCli(["bun", "hunk"]);
+
+    if (parsed.kind !== "help") {
+      throw new Error("Expected top-level help output.");
+    }
+
+    expect(parsed.text).toContain("--exclude <pattern>");
+  });
+});
+
 describe("parseCli extension flags", () => {
   test("defaults to leaving extension options unset", async () => {
     const parsed = await parseCli(["bun", "hunk", "show", "HEAD"]);

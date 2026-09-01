@@ -250,6 +250,20 @@ function normalizeBoolean(value: unknown) {
   return typeof value === "boolean" ? value : undefined;
 }
 
+/** Accept an array of non-empty glob patterns from config files. */
+function normalizeExcludePatterns(value: unknown) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (!Array.isArray(value) || value.some((entry) => typeof entry !== "string")) {
+    throw new Error("Expected exclude to be an array of glob pattern strings.");
+  }
+
+  const patterns = (value as string[]).filter((entry) => entry.trim().length > 0);
+  return patterns.length > 0 ? patterns : undefined;
+}
+
 /** Accept only plain strings from config files. */
 function normalizeString(value: unknown) {
   return typeof value === "string" && value.length > 0 ? value : undefined;
@@ -353,6 +367,14 @@ export const CONFIG_REFERENCE_OPTIONS: readonly ConfigReferenceOption[] = [
     accepted: "`true` or `false`",
     runtimeDefault: false,
     description: "Hide untracked files from working-tree reviews.",
+  },
+  {
+    key: "exclude",
+    property: "excludePatterns",
+    type: "string list",
+    accepted: "an array of glob patterns",
+    description:
+      'Hide files whose path matches one of these globs. A pattern without `/` matches any path segment, so `"*.md"` hides Markdown anywhere and `"test"` hides any `test/` directory; a pattern with `/` is anchored at the changeset root. `--exclude` replaces this list rather than adding to it.',
   },
   {
     key: "line_numbers",
@@ -966,6 +988,8 @@ function normalizeConfigReferenceValue(property: keyof CommonOptions, value: unk
       return normalizeReviewGap(value, "hunk_gap");
     case "sidebar":
       return normalizeSidebarVisibility(value);
+    case "excludePatterns":
+      return normalizeExcludePatterns(value);
     default:
       return normalizeBoolean(value);
   }
@@ -1020,6 +1044,7 @@ function mergeOptions(base: CommonOptions, overrides: CommonOptions): CommonOpti
     experimental: overrides.experimental ?? base.experimental,
     fast: overrides.fast ?? base.fast,
     excludeUntracked: overrides.excludeUntracked ?? base.excludeUntracked,
+    excludePatterns: overrides.excludePatterns ?? base.excludePatterns,
     lineNumbers: overrides.lineNumbers ?? base.lineNumbers,
     tabWidth: overrides.tabWidth ?? base.tabWidth,
     fileGap: overrides.fileGap ?? base.fileGap,
